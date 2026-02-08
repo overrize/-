@@ -3,431 +3,795 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>年货清单助手 🧧</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <title>年货清单助手</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+        /* ========== 微信兼容基础样式 ========== */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;  /* 微信风格浅灰背景 */
+            color: #333;
             min-height: 100vh;
             padding-bottom: env(safe-area-inset-bottom);
+            line-height: 1.6;
         }
 
-        /* 微信专属验证层 */
-        .wechat-only-mask {
+        /* ========== 微信风格组件 ========== */
+        
+        /* 顶部导航栏 - 微信风格 */
+        .wx-header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .wx-header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            height: 44px;
+        }
+
+        .wx-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #000;
+            flex: 1;
+            text-align: center;
+        }
+
+        .wx-back, .wx-action {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #576b95;
+        }
+
+        /* 主内容区 */
+        .wx-container {
+            padding-top: calc(44px + env(safe-area-inset-top));
+            padding-bottom: 100px;
+            max-width: 100%;
+        }
+
+        /* 微信卡片 - 无玻璃效果，纯白色 */
+        .wx-card {
+            background: #fff;
+            margin: 12px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .wx-card-header {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wx-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .wx-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .wx-card-subtitle {
+            font-size: 13px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* 输入区域 */
+        .wx-input-wrap {
+            padding: 12px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .wx-input {
+            flex: 1;
+            height: 40px;
+            background: #f7f7f7;
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 15px;
+            color: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .wx-input:focus {
+            border-color: #07c160;
+            background: #fff;
+        }
+
+        .wx-btn {
+            height: 40px;
+            padding: 0 20px;
+            background: #07c160;  /* 微信绿 */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .wx-btn:active {
+            opacity: 0.8;
+        }
+
+        .wx-btn-secondary {
+            background: #f2f2f2;
+            color: #576b95;
+        }
+
+        /* 快速标签 */
+        .wx-tags {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px 12px;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .wx-tag {
+            padding: 6px 12px;
+            background: #f2f2f2;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #576b95;
+            border: none;
+            display: inline-block;
+        }
+
+        .wx-tag:active {
+            background: #e5e5e5;
+        }
+
+        /* 列表项 - 微信风格 */
+        .wx-list {
+            background: #fff;
+        }
+
+        .wx-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+
+        .wx-item:last-child {
+            border-bottom: none;
+        }
+
+        .wx-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #c9c9c9;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #fff;
+        }
+
+        .wx-checkbox.checked {
+            background: #07c160;
+            border-color: #07c160;
+        }
+
+        .wx-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .wx-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .wx-item-title {
+            font-size: 16px;
+            color: #000;
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .wx-item-title.completed {
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .wx-item-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .wx-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: #f2f2f2;
+            color: #666;
+        }
+
+        .wx-badge.food { background: #e8f5e9; color: #2e7d32; }
+        .wx-badge.snacks { background: #fff3e0; color: #ef6c00; }
+        .wx-badge.gifts { background: #ffebee; color: #c62828; }
+        .wx-badge.decor { background: #f3e5f5; color: #6a1b9a; }
+
+        /* 操作按钮组 */
+        .wx-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .wx-link-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .wx-link-taobao {
+            background: #fff0e8;
+            color: #ff5000;
+        }
+
+        .wx-link-jd {
+            background: #ffebee;
+            color: #e4393c;
+        }
+
+        .wx-delete {
+            color: #999;
+            font-size: 18px;
+            padding: 8px;
+            margin: -8px;
+        }
+
+        /* 底部操作栏 */
+        .wx-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e5e5e5;
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .wx-footer-btn {
+            flex: 1;
+            height: 44px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .wx-footer-btn.primary {
+            background: #07c160;
+            color: white;
+        }
+
+        .wx-footer-btn.secondary {
+            background: #f2f2f2;
+            color: #576b95;
+        }
+
+        /* 空状态 */
+        .wx-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .wx-empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* 弹窗 - 微信风格 */
+        .wx-modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            display: none;
             align-items: center;
             justify-content: center;
-            padding: 40px;
+            padding: 20px;
+        }
+
+        .wx-modal.show {
+            display: flex;
+        }
+
+        .wx-modal-content {
+            background: #fff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 300px;
+            overflow: hidden;
+        }
+
+        .wx-modal-header {
+            padding: 24px 24px 16px;
             text-align: center;
         }
 
-        .wechat-only-mask.hidden {
-            display: none;
-        }
-
-        .lock-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(239, 68, 68, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            margin-bottom: 30px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-        }
-
-        .wechat-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #ef4444, #f97316);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .wechat-desc {
-            color: #999;
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            max-width: 300px;
-        }
-
-        .wechat-steps {
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            padding: 25px;
-            width: 100%;
-            max-width: 320px;
-            margin-bottom: 30px;
-        }
-
-        .step-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            color: #ccc;
-            font-size: 14px;
-        }
-
-        .step-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .step-num {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #ef4444, #f97316);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 13px;
-            flex-shrink: 0;
-        }
-
-        .open-wechat-btn {
-            background: #07c160;
-            color: white;
-            border: none;
-            padding: 16px 40px;
-            border-radius: 12px;
+        .wx-modal-title {
             font-size: 17px;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(7, 193, 96, 0.3);
+            color: #000;
+            margin-bottom: 8px;
         }
 
-        /* 主应用样式（原有样式保留，略） */
-        .glass {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .wx-modal-body {
+            padding: 0 24px 24px;
+            text-align: center;
         }
-        
-        /* ... 其他原有样式 ... */
-        
-        .app-container {
-            display: none;
+
+        .wx-qrcode-wrap {
+            background: #f7f7f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
         }
-        
-        .app-container.show {
-            display: block;
+
+        .wx-modal-footer {
+            display: flex;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .wx-modal-btn {
+            flex: 1;
+            height: 50px;
+            border: none;
+            background: #fff;
+            font-size: 16px;
+            color: #000;
+            font-weight: 500;
+        }
+
+        .wx-modal-btn.primary {
+            color: #576b95;
+            border-left: 1px solid #e5e5e5;
+        }
+
+        .wx-modal-btn:active {
+            background: #f2f2f2;
+        }
+
+        /* Toast */
+        .wx-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .wx-toast.show {
+            opacity: 1;
+        }
+
+        /* 分类筛选 */
+        .wx-tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .wx-tab {
+            padding: 12px 16px;
+            font-size: 15px;
+            color: #666;
+            position: relative;
+            border: none;
+            background: none;
+        }
+
+        .wx-tab.active {
+            color: #07c160;
+            font-weight: 600;
+        }
+
+        .wx-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 16px;
+            right: 16px;
+            height: 2px;
+            background: #07c160;
         }
     </style>
 </head>
 <body>
 
-    <!-- 微信专属验证层 -->
-    <div class="wechat-only-mask" id="wechatOnlyMask">
-        <div class="lock-icon">🔒</div>
-        <h1 class="wechat-title">微信专属访问</h1>
-        <p class="wechat-desc">
-            为保护您的年货清单隐私<br>
-            本页面仅限通过微信扫码打开
-        </p>
-        
-        <div class="wechat-steps">
-            <div class="step-item">
-                <div class="step-num">1</div>
-                <div>使用微信右上角"扫一扫"</div>
-            </div>
-            <div class="step-item">
-                <div class="step-num">2</div>
-                <div>扫描您生成的专属二维码</div>
-            </div>
-            <div class="step-item">
-                <div class="step-num">3</div>
-                <div>即可安全访问您的清单</div>
-            </div>
+    <!-- 顶部导航 -->
+    <header class="wx-header">
+        <div class="wx-header-content">
+            <div class="wx-back" onclick="history.back()">‹</div>
+            <div class="wx-title">年货清单助手 🧧</div>
+            <div class="wx-action" onclick="showQR()">⋮</div>
         </div>
+    </header>
 
-        <button class="open-wechat-btn" onclick="openWeChat()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8.5 13.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm7 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-            </svg>
-            打开微信扫一扫
-        </button>
+    <!-- 主内容 -->
+    <div class="wx-container">
         
-        <p style="margin-top: 20px; font-size: 12px; color: #666;">
-            当前环境：<span id="currentEnv">未知</span>
-        </p>
-    </div>
-
-    <!-- 主应用容器 -->
-    <div class="app-container" id="appContainer">
-        <!-- 这里放置之前的完整应用代码 -->
-        <!-- 为节省篇幅，此处省略，实际使用时将之前的代码放入此处 -->
-        
-        <header class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
-            <div class="max-w-lg mx-auto px-4 py-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-xl shadow-lg">
-                            🧧
-                        </div>
-                        <div>
-                            <h1 class="text-lg font-bold">年货清单助手</h1>
-                            <p class="text-xs text-gray-400" id="statsText">安全模式 · 微信专属</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="showQrModal()" class="p-2 rounded-full bg-gradient-to-r from-red-500/20 to-orange-500/20 text-orange-400 border border-orange-500/30">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-lg mx-auto px-4 pt-24 pb-40">
-            <div class="glass rounded-2xl p-4 mb-4">
-                <div class="flex gap-3">
-                    <input type="text" id="itemInput" placeholder="输入要买的东西..." 
-                           class="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-red-500 text-base">
-                    <button onclick="addItem()" class="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
-                        添加
-                    </button>
+        <!-- 统计卡片 -->
+        <div class="wx-card" style="margin-top: 12px;">
+            <div class="wx-card-header">
+                <div class="wx-icon">🧧</div>
+                <div>
+                    <div class="wx-card-title">待购买 <span id="pendingCount">0</span> 项</div>
+                    <div class="wx-card-subtitle">已完成 <span id="completedCount">0</span> 项</div>
                 </div>
             </div>
             
-            <div id="shoppingList" class="space-y-3"></div>
-        </main>
+            <!-- 分类标签 -->
+            <div class="wx-tabs">
+                <button class="wx-tab active" onclick="setCat('all')">全部</button>
+                <button class="wx-tab" onclick="setCat('food')">食品</button>
+                <button class="wx-tab" onclick="setCat('snacks')">零食</button>
+                <button class="wx-tab" onclick="setCat('gifts')">礼品</button>
+                <button class="wx-tab" onclick="setCat('decor')">装饰</button>
+            </div>
 
-        <!-- 底部栏 -->
-        <div class="fixed bottom-0 left-0 right-0 glass border-t border-white/10 p-4 safe-bottom z-40">
-            <div class="max-w-lg mx-auto flex gap-3">
-                <button onclick="showQrModal()" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
-                    <span>📱</span> 生成专属二维码
-                </button>
+            <!-- 输入区 -->
+            <div class="wx-input-wrap">
+                <input type="text" class="wx-input" id="itemInput" placeholder="输入要买的东西..." onkeypress="handleEnter(event)">
+                <button class="wx-btn" onclick="addItem()">添加</button>
+            </div>
+
+            <!-- 快速标签 -->
+            <div class="wx-tags">
+                <span class="wx-tag" onclick="quickAdd('坚果礼盒')">坚果礼盒</span>
+                <span class="wx-tag" onclick="quickAdd('糖果')">糖果</span>
+                <span class="wx-tag" onclick="quickAdd('对联')">对联</span>
+                <span class="wx-tag" onclick="quickAdd('红包')">红包</span>
+                <span class="wx-tag" onclick="quickAdd('车厘子')">车厘子</span>
             </div>
         </div>
+
+        <!-- 清单列表 -->
+        <div class="wx-card">
+            <div id="itemList" class="wx-list">
+                <!-- 动态生成 -->
+            </div>
+            <div id="emptyState" class="wx-empty" style="display: none;">
+                <div class="wx-empty-icon">🛒</div>
+                <div>清单还是空的</div>
+                <div style="font-size: 13px; margin-top: 8px;">点击上方快速标签添加</div>
+            </div>
+        </div>
+
+        <!-- 操作提示 -->
+        <div style="padding: 20px; text-align: center; color: #999; font-size: 13px;">
+            💡 提示：点击"复制链接"后，可粘贴到淘宝/京东搜索
+        </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="wx-footer">
+        <button class="wx-footer-btn secondary" onclick="copyTaobao()">
+            <span>🍑</span> 复制淘宝链接
+        </button>
+        <button class="wx-footer-btn secondary" onclick="copyJD()">
+            <span>🐕</span> 复制京东链接
+        </button>
+        <button class="wx-footer-btn primary" onclick="showQR()">
+            <span>📱</span> 分享
+        </button>
     </div>
 
     <!-- 二维码弹窗 -->
-    <div class="fixed inset-0 bg-black/90 backdrop-blur z-[10000] hidden items-center justify-center p-4" id="qrModal">
-        <div class="bg-[#1a1a1a] rounded-3xl p-6 w-full max-w-sm border border-white/10">
-            <div class="text-center mb-6">
-                <h3 class="text-xl font-bold mb-2">🔐 专属访问二维码</h3>
-                <p class="text-sm text-gray-400">仅限微信扫码打开</p>
+    <div class="wx-modal" id="qrModal">
+        <div class="wx-modal-content">
+            <div class="wx-modal-header">
+                <div class="wx-modal-title">分享年货清单</div>
             </div>
-            
-            <div class="bg-white p-4 rounded-2xl mb-6">
-                <div id="secureQrcode" class="flex justify-center"></div>
-                <p class="text-center text-gray-600 text-xs mt-3">
-                    扫码即可访问您的年货清单<br>
-                    请勿分享给陌生人
-                </p>
+            <div class="wx-modal-body">
+                <div class="wx-qrcode-wrap">
+                    <div id="qrcode"></div>
+                </div>
+                <div style="font-size: 13px; color: #666; line-height: 1.5;">
+                    微信扫码即可查看<br>
+                    建议截图保存到相册
+                </div>
             </div>
-
-            <div class="space-y-3">
-                <button onclick="saveSecureQr()" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white py-3 rounded-xl font-semibold">
-                    保存到相册
-                </button>
-                <button onclick="closeQrModal()" class="w-full bg-white/10 text-white py-3 rounded-xl">
-                    关闭
-                </button>
+            <div class="wx-modal-footer">
+                <button class="wx-modal-btn" onclick="closeQR()">关闭</button>
+                <button class="wx-modal-btn primary" onclick="saveQR()">保存图片</button>
             </div>
         </div>
     </div>
 
+    <!-- Toast -->
+    <div class="wx-toast" id="toast"></div>
+
     <script>
-        // ==================== 微信专属验证逻辑 ====================
-        
-        // 检测环境
-        const isWechat = /MicroMessenger/i.test(navigator.userAgent);
-        const isQQ = /QQ/i.test(navigator.userAgent);
-        const isDingTalk = /DingTalk/i.test(navigator.userAgent);
-        
-        // 允许的访问环境（可根据需要调整）
-        const allowedEnvs = ['wechat', 'qq', 'dingtalk']; // 企业微信、QQ、钉钉也可访问
-        
-        function checkAccess() {
-            let env = 'browser';
-            if (isWechat) env = 'wechat';
-            else if (isQQ) env = 'qq';
-            else if (isDingTalk) env = 'dingtalk';
-            
-            document.getElementById('currentEnv').textContent = 
-                env === 'wechat' ? '微信' : 
-                env === 'qq' ? 'QQ' : 
-                env === 'dingtalk' ? '钉钉' : '普通浏览器';
-            
-            // 如果是允许的 App 环境，直接显示应用
-            if (allowedEnvs.includes(env)) {
-                document.getElementById('wechatOnlyMask').classList.add('hidden');
-                document.getElementById('appContainer').classList.add('show');
-                initApp();
-            } else {
-                // 浏览器环境，显示验证层
-                document.getElementById('wechatOnlyMask').classList.remove('hidden');
-                document.getElementById('appContainer').classList.remove('show');
-            }
-        }
-
-        function openWeChat() {
-            // 尝试打开微信
-            window.location.href = 'weixin://';
-            
-            // 提示用户
-            setTimeout(() => {
-                alert('请手动打开微信，使用"扫一扫"功能扫描您的专属二维码');
-            }, 500);
-        }
-
-        // ==================== 安全增强功能 ====================
-        
-        // 生成带时间戳的唯一链接（防止被缓存/分享后长期有效）
-        function generateSecureUrl() {
-            const baseUrl = window.location.origin + window.location.pathname;
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substring(2, 8);
-            
-            // 生成临时访问令牌（实际项目中可配合后端）
-            const token = btoa(`${timestamp}:${random}`).replace(/=/g, '');
-            
-            return `${baseUrl}?t=${token}&_=${timestamp}`;
-        }
-
-        // 显示二维码
-        function showQrModal() {
-            const modal = document.getElementById('qrModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            // 生成安全链接
-            const secureUrl = generateSecureUrl();
-            
-            // 清空旧二维码
-            document.getElementById('secureQrcode').innerHTML = '';
-            
-            // 生成新二维码
-            new QRCode(document.getElementById('secureQrcode'), {
-                text: secureUrl,
-                width: 200,
-                height: 200,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-
-        function closeQrModal() {
-            const modal = document.getElementById('qrModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function saveSecureQr() {
-            const canvas = document.querySelector('#secureQrcode canvas');
-            if (canvas) {
-                const link = document.createElement('a');
-                link.download = `年货清单专属码_${Date.now()}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-                alert('二维码已保存，请仅在微信内部分享');
-            }
-        }
-
-        // ==================== 应用功能（简化版） ====================
-        
+        // 数据
         let items = JSON.parse(localStorage.getItem('nyItems2024') || '[]');
-        
-        function initApp() {
-            renderItems();
+        let currentCat = 'all';
+
+        const categories = {
+            food: { name: '食品', class: 'food' },
+            snacks: { name: '零食', class: 'snacks' },
+            gifts: { name: '礼品', class: 'gifts' },
+            decor: { name: '装饰', class: 'decor' },
+            other: { name: '其他', class: '' }
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            render();
             updateStats();
+        });
+
+        function render() {
+            const list = document.getElementById('itemList');
+            const empty = document.getElementById('emptyState');
+            
+            let filtered = items;
+            if (currentCat !== 'all') {
+                filtered = items.filter(i => i.category === currentCat);
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            
+            list.innerHTML = filtered.map(item => {
+                const cat = categories[item.category];
+                return `
+                    <div class="wx-item">
+                        <div class="wx-checkbox ${item.completed ? 'checked' : ''}" onclick="toggle(${item.id})"></div>
+                        <div class="wx-item-content">
+                            <div class="wx-item-title ${item.completed ? 'completed' : ''}">${item.name}</div>
+                            <div class="wx-item-meta">
+                                <span class="wx-badge ${cat.class}">${cat.name}</span>
+                                ${!item.completed ? `
+                                <span class="wx-link-btn wx-link-taobao" onclick="copyItem('taobao', '${item.name}')">复制淘宝</span>
+                                <span class="wx-link-btn wx-link-jd" onclick="copyItem('jd', '${item.name}')">复制京东</span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <span class="wx-delete" onclick="del(${item.id})">🗑️</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         function addItem() {
             const input = document.getElementById('itemInput');
             const name = input.value.trim();
-            if (!name) return;
-            
+            if (!name) return showToast('请输入商品名称');
+
+            let cat = 'other';
+            if (/坚果|水果|肉|海鲜|蔬菜|蛋|奶/i.test(name)) cat = 'food';
+            else if (/糖|巧克力|饼干|薯片|饮料|酒|茶/i.test(name)) cat = 'snacks';
+            else if (/礼盒|礼|送|长辈/i.test(name)) cat = 'gifts';
+            else if (/对联|福|灯笼|红包|窗花/i.test(name)) cat = 'decor';
+
             items.unshift({
                 id: Date.now(),
                 name: name,
+                category: cat,
                 completed: false,
                 createdAt: Date.now()
             });
-            
-            localStorage.setItem('nyItems2024', JSON.stringify(items));
+
+            save();
             input.value = '';
-            renderItems();
+            render();
             updateStats();
+            showToast('已添加');
         }
 
-        function renderItems() {
-            const container = document.getElementById('shoppingList');
-            if (items.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-gray-500">清单为空，添加第一件年货吧</div>';
-                return;
-            }
-            
-            container.innerHTML = items.map(item => `
-                <div class="glass rounded-2xl p-4 flex items-center gap-3">
-                    <input type="checkbox" ${item.completed ? 'checked' : ''} 
-                           onchange="toggleItem(${item.id})"
-                           class="w-5 h-5 rounded border-gray-600 text-red-600 focus:ring-red-600 bg-gray-800">
-                    <span class="${item.completed ? 'line-through text-gray-500' : 'text-white'} flex-1">${item.name}</span>
-                    <button onclick="deleteItem(${item.id})" class="text-gray-500">🗑️</button>
-                </div>
-            `).join('');
+        function quickAdd(name) {
+            document.getElementById('itemInput').value = name;
+            addItem();
         }
 
-        function toggleItem(id) {
+        function toggle(id) {
             const item = items.find(i => i.id === id);
             if (item) {
                 item.completed = !item.completed;
-                localStorage.setItem('nyItems2024', JSON.stringify(items));
-                renderItems();
+                save();
+                render();
                 updateStats();
             }
         }
 
-        function deleteItem(id) {
-            items = items.filter(i => i.id !== id);
-            localStorage.setItem('nyItems2024', JSON.stringify(items));
-            renderItems();
-            updateStats();
+        function del(id) {
+            if (confirm('确定删除？')) {
+                items = items.filter(i => i.id !== id);
+                save();
+                render();
+                updateStats();
+            }
+        }
+
+        function setCat(cat) {
+            currentCat = cat;
+            document.querySelectorAll('.wx-tab').forEach((tab, idx) => {
+                const cats = ['all', 'food', 'snacks', 'gifts', 'decor'];
+                tab.classList.toggle('active', cats[idx] === cat);
+            });
+            render();
+        }
+
+        function copyItem(platform, name) {
+            const url = platform === 'taobao' 
+                ? `https://s.taobao.com/search?q=${encodeURIComponent(name)}`
+                : `https://so.m.jd.com/ware/search.action?keyword=${encodeURIComponent(name)}`;
+            
+            copyToClipboard(`${name}\n${url}`, platform === 'taobao' ? '淘宝链接已复制' : '京东链接已复制');
+        }
+
+        function copyTaobao() {
+            const pending = items.filter(i => !i.completed);
+            if (pending.length === 0) return showToast('没有待购买商品');
+            
+            const text = pending.map((item, i) => `${i+1}. ${item.name}\nhttps://s.taobao.com/search?q=${encodeURIComponent(item.name)}`).join('\n\n');
+            copyToClipboard('🍑 淘宝年货清单\n\n' + text, '淘宝链接已复制');
+        }
+
+        function copyJD() {
+            const pending = items.filter(i => !i.completed);
+            if (pending.length === 0) return showToast('没有待购买商品');
+            
+            const text = pending.map((item, i) => `${i+1}. ${item.name}\nhttps://so.m.jd.com/ware/search.action?keyword=${encodeURIComponent(item.name)}`).join('\n\n');
+            copyToClipboard('🐕 京东年货清单\n\n' + text, '京东链接已复制');
+        }
+
+        function copyToClipboard(text, msg) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => showToast(msg));
+            } else {
+                const input = document.createElement('textarea');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast(msg);
+            }
+        }
+
+        function showQR() {
+            document.getElementById('qrModal').classList.add('show');
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), {
+                text: window.location.href,
+                width: 150,
+                height: 150,
+                colorDark: '#000',
+                colorLight: '#fff'
+            });
+        }
+
+        function closeQR() {
+            document.getElementById('qrModal').classList.remove('show');
+        }
+
+        function saveQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = '年货清单二维码.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                showToast('已保存');
+            }
         }
 
         function updateStats() {
             const pending = items.filter(i => !i.completed).length;
-            document.getElementById('statsText').textContent = `待购买 ${pending} 项 · 微信专属`;
+            const completed = items.filter(i => i.completed).length;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('completedCount').textContent = completed;
         }
 
-        // 初始化检查
-        checkAccess();
-        
-        // 监听 URL 变化（防止通过复制链接在非微信环境打开）
-        window.addEventListener('popstate', checkAccess);
+        function save() {
+            localStorage.setItem('nyItems2024', JSON.stringify(items));
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') addItem();
+        }
+
+        // 点击遮罩关闭弹窗
+        document.getElementById('qrModal').addEventListener('click', function(e) {
+            if (e.target === this) closeQR();
+        });
     </script>
 </body>
 </html>
